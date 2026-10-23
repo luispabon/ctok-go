@@ -1,0 +1,16 @@
+{
+  "artifacts": {
+    "testdata/unicode/case.json": "af3b9d0916add5851fd8c01c9822cf09b202e2aee333a3a866731289d46eb319",
+    "testdata/unicode/conformance.json.gz": "7ae28b10729ca5d2d4a43c0f516efeb877cf29e16f7951fdc925f83333411414",
+    "testdata/unicode/nfc.json": "f036fdfe1fa84edcb4939c12d0f6ddb19a946bdbcf192eda210a056329113a34",
+    "testdata/unicode/normalize.json": "99987b88335012d0fa2cd844359895dbb32e25c7df3d965f173c218060896ddf",
+    "testdata/unicode/properties.json": "08f2cb794fee34ffbbcbd0d43eae87b3f5a211b583f29bc0087a8fbca6f083ed",
+    "tools/reference/finish_manifest.py": "a5039ea34b6994ae7d934382caada71967f27847ae981a917235fb5126f2b0d6",
+    "tools/reference/generate.py": "7cffcd06210d01a8f8b44d8f4ee1b1b98befa99489b70a2923e931146a5a8b40",
+    "unicode_tables.go": "2d699c4a465fdcb72b747e29dcfbb337bdabcfbdd02513bf938052c9aa01349c"
+  },
+  "generator_version": 1,
+  "python": "3.13.17",
+  "regex": "2026.8.31",
+  "unicodedata": "15.1.0"
+}

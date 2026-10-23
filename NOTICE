@@ -1,0 +1,14 @@
+ctok-go is an unofficial, unaffiliated count reconstruction for Claude text.
+It is not endorsed by Anthropic and is not an official tokenizer.
+
+The count reconstruction and vocabulary are derived from ctok v1.3.0:
+https://github.com/sanderland/ctok
+Copyright (c) 2026 Sander Land, MIT License (see LICENSE).
+Go implementation contributions: Copyright (c) 2026 Luis Pabon.
+
+No separately licensed upstream evaluation corpora are included.
+Unicode classification, case and normalization data reproduce the recorded oracle.
+Vendored x/text normalization code uses the BSD license in internal/norm/LICENSE;
+its patent grant is retained in internal/norm/PATENTS.
+Unicode data notices are retained in UNICODE-LICENSE.
+See REFERENCE.json and PROVENANCE.md for source pins and limitations.

@@ -1,0 +1,12 @@
+{
+  "description": "NFC-only x/text adaptation: unbounded compact segment storage, stable CCC counting sort, no stream-safe CGJ insertion; maintained composition, Hangul and property decoding retained",
+  "upstream_module": "golang.org/x/text",
+  "upstream_version": "v0.42.0",
+  "patched_source_sha256": {
+    "internal/norm/buffer.go": "a9b8036a75d97009018ada6d2495405136da750f5fa5584b3c4eef98d8cba3c1",
+    "internal/norm/composition.go": "0f5a384e5d2532b449c5e3acc9e1095c37a5bccfc7346a0242032f516d7befe5",
+    "internal/norm/forminfo.go": "b3e4c5393b9c9f8a7fdc955d8bfaf9abfbc57295f3ccab9263aaa4984eda643d",
+    "internal/norm/normalize.go": "61b2663d174a856e005ea6d9c6ba29f718772d0e9b2bfebbea98ab7c576bbb4b",
+    "internal/norm/trie.go": "a300670070ebf1cb7dd52d62e44c030c2fedbdd063ee5f5ec300f48ccadda37b"
+  }
+}

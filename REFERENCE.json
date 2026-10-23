@@ -1,0 +1,28 @@
+{
+  "upstream": {
+    "repository": "https://github.com/sanderland/ctok",
+    "version": "1.3.0",
+    "commit": "434612e23c9d9d42d1c5eba23c4761d653e0279d",
+    "archive_url": "https://codeload.github.com/sanderland/ctok/tar.gz/refs/tags/v1.3.0",
+    "archive_sha256": "80c051e1ffeebdb8c58d024366bde69f84f57b7d230ab976475b6d6c67252646",
+    "sources_sha256": {
+      "ctok/normalize.py": "00b80a30507e686e1f0d284c370db4bdc3ba494c79af6f1ed10fae5dad753cd6",
+      "ctok/constants.py": "5df7840e0a1f99348c4bf875b2bd99e7c4235b8c15e82d550f591288fed8968f",
+      "ctok/main.py": "99d1decad615a7591d2125f474e3aee5b707b4206c2f1c9fce33ef850332aabf",
+      "ctok/engine.py": "d6947168af9d27b51f1021c8604fd62eda315554cc8978c61eedc40b5aea6163",
+      "ctok/notation.py": "8500af35b8d51cae0553867e53fe5da9e0f25521be686214ebba4c6c8fdf63c3",
+      "ctok/data/pieces_v4_7.json": "a785fc240010c855f3d9a498fbd422ee389752dd151f1d5eef57ca8c85c19993"
+    }
+  },
+  "oracle": {
+    "image": "python:3.13.17-slim@sha256:d879ed88565a7a3c614b980b369d4a5025a9d057b71f93d09fc6d0b2ca823a18",
+    "architecture": "linux/amd64",
+    "python": "3.13.17",
+    "unicodedata": "15.1.0",
+    "regex": "2026.8.31",
+    "regex_unicode": "17.0.0",
+    "regex_wheel_url": "https://files.pythonhosted.org/packages/b7/5e/4516280c9680e2e417fbb6c9f5c519de9d1d824b46a9feb134fdac3f47c8/regex-2026.8.31-cp313-cp313-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl",
+    "regex_wheel_sha256": "15e9e862c6e905ef66ea5f019deb5ac5fdeebf8fc134ea4c7b5d5c2eb7bdcdd8"
+  },
+  "generator_version": 1
+}
