@@ -1,0 +1,27 @@
+{
+  "categories": {
+    "code": 24998,
+    "digits": 24998,
+    "fixed": 20,
+    "long": 24998,
+    "markers": 24998,
+    "marks": 24998,
+    "prose": 24998,
+    "scalars": 24998,
+    "scripts": 24998,
+    "seams": 24998,
+    "whitespace": 24998
+  },
+  "corpus_sha256": "7abf5b4b6bb0d0825c77694b3dbf761ec61eeb48e0de33070edf6d3c53c13467",
+  "count": 250000,
+  "counts_sha256": "6d11f6503926a2c94e8fa587c0eef98b64fd0a80f734a835e095a78d4fc0fe69",
+  "generator_version": 1,
+  "input_bytes": 32438088,
+  "oracle_script_sha256": "fd26b9edc40b4daee7e02b6690bab7d0037233ac108ab8c6bf1267cf43e600f3",
+  "python": "3.13.17",
+  "regex": "2026.8.31",
+  "schema": 1,
+  "seed": 931,
+  "unicodedata": "15.1.0",
+  "upstream_commit": "434612e23c9d9d42d1c5eba23c4761d653e0279d"
+}

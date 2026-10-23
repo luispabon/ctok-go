@@ -97,5 +97,94 @@ marks. Race tests, vet and CGO-disabled build pass for this substrate.
 Initial NFC-only 1 MiB benchmarks on AMD Ryzen 9 7940HS linux/amd64, Go 1.26.10:
 ASCII 0.93 ms and no allocations; acute marks 66.9 ms and 10.52 MB allocated;
 alternating reordered marks 69.2 ms and 14.68 MB allocated. These are single-run
-initial measurements, not full-counter performance claims. Full counting parity,
-resource gates and independent review remain required before release.
+initial measurements, not full-counter performance claims.
+These historical measurements precede the storage optimization below and are
+not current full-counter measurements.
+
+## Public counter and offline parity
+
+The public API supports only explicit family V48. CountContent excludes framing;
+Count adds six tokens. The stream port preserves maximal class runs, hard-kind
+subdivision, Syriac/stray-mark fusion, contractions, literal-marker escapes,
+single-space seams and content-final newline pricing. V48 has no frame bow.
+The per-call tiling DP now uses a bounded ring of maximum trie depth plus one;
+the reviewed whole-input DP remains as a differential test reference. Case
+emission avoids per-word allocations, with the previous case implementation
+retained in case_reference_test.go as a test oracle. Output capacity counts
+runes and per-run marker bounds, not bytes or an assumed twofold expansion.
+
+`internal/testcorpus/corpus.go` version 1, seed 931, defines 250000 authored valid
+UTF-8 cases, totaling 32438088 input bytes. The ten evenly weighted pools cover
+code, prose, scripts, marks, markers, seams, digits, scalars, whitespace and long
+runs, plus 20 fixed cases. Large cases are bounded at 100 KiB. The generator uses
+SplitMix64 and explicit atoms, never Go's version-dependent Unicode tables.
+The corpus SHA-256 hashes each uint32 little-endian byte length followed by the
+raw bytes, so all control characters are preserved:
+`7abf5b4b6bb0d0825c77694b3dbf761ec61eeb48e0de33070edf6d3c53c13467`.
+
+`tools/reference/count_corpus.py` calls upstream's public tokenize API for V48
+and verifies its six PAD frame tokens on every case. The deterministic gzip
+artifact stores uint32 framed/content count pairs, without runtime witnesses or
+corpus strings. Its SHA-256 is
+`6d11f6503926a2c94e8fa587c0eef98b64fd0a80f734a835e095a78d4fc0fe69`.
+The adjacent manifest records category totals, input bytes, seed/version, oracle
+pins and generator hash. Both Go 1.26.10 and 1.27.3 regenerate identical inputs
+and pass exact ordinary and race count parity. The issue's 10000-byte authored
+payload SHA-256 is
+`31d2500f97354cdfad22b5e6acb757c0569965048f7a17fb427cbaf28817c53f`;
+its appended content delta is exactly 6446.
+
+`tools/reference/stream_fixtures.py` records the first 5000 corpus inputs, exact
+upstream marked streams, LF tails and framed counts. The deterministic
+streams.json.gz SHA-256 is
+`09c84815ff6d9750cc0a386c4e89f80fd07fdccd8ed28ff3bde4a181c001ead6`.
+The stream generator SHA-256 is
+`22c658d1c3177864358089fde3264954a0704abed41efa53a1d42a942cb16cdc`.
+Generation uses the same pinned image offline. Commands are in the tooling README.
+`tools/reference/api_edges.py` adapts 171 input vectors from upstream's MIT
+`tests/test_api.py`, including all 48 MARK_ROWS and apostrophe, contraction,
+piece, symbol and explicit API edges. Expectations are regenerated for V48,
+not copied from older-family counts or streams. Source SHA-256:
+`5818442ec9855191280323b36f672ca39c285083cd9d5fd69dd5710c0aff9723`.
+Generator SHA-256:
+`218196e2d5c272339f5267f1c00bd5400d1e3f1f9b9f4babe52bd6a860b2bdef`.
+The api_edges.json artifact SHA-256 is
+`78bb31da0fb67b987a7111cda106dc0d224c0ea95835c81cfc1e836d47eb8734`.
+No separately licensed upstream evaluation corpora are used.
+
+## Normalizer storage bounds and resource evidence
+
+The full counter initially exceeded the 24 bytes/input-byte plus 1 MiB allocation
+gate on short words and combining runs. A bounded tiling ring, direct case
+emission and run-based stream sizing fixed those cases. Expanded nonstarter runs
+(U+0344 and U+0F73) then exposed normalization storage costs. The approved
+storage-only adaptation pre-measures segment/output extents, allocates the
+8-byte main entries once, packs stable-sort scratch into 4-byte entries and
+writes to a pre-sized strings.Builder without a final copy. Composition, Hangul,
+property decoding and generated tables are unchanged. There is no CGJ insertion,
+truncation, relaxed parity or relaxed resource gate. The extra measurement pass
+trades CPU for bounded allocations on non-normal input.
+
+On AMD Ryzen 9 7940HS, linux/amd64, Go 1.26.10, unprofiled development runs:
+
+| Input | 1 MiB allocated | 4 MiB allocated | 1 MiB elapsed |
+| --- | ---: | ---: | ---: |
+| ASCII code | 7708976 B | 30826800 B | 122 ms |
+| Mixed Unicode | 3503720 B | 13984032 B | 92 ms |
+| Short words | 10486048 B | 41943328 B | 182 ms |
+| Alternating combining marks | 11542816 B | 46145936 B | 107 ms |
+| U+0344 expansion | 18882848 B | 75506080 B | 201 ms |
+| U+0F73 expansion | 16097568 B | 64332064 B | 179 ms |
+| Mixed expansion plus forced sort | 23077152 B | 92283168 B | 213 ms |
+
+The last input is almost all U+0344 followed by U+0F73, forcing sorting across
+the maximum-density expanded segment. All 24 pathological input families pass
+allocation caps at 1 and 4 MiB and slope <=24 B/input-byte. Cold initialization
+in a fresh test subprocess measured 10.4 ms, with 1137792 B retained shared heap
+after GC (limits 150 ms and 48 MiB). Tests measure bytes, not allocation counts.
+Benchmarks cover 1 KiB, 10 KiB, 100 KiB, 1 MiB and 4 MiB. Timings are machine
+specific and uninstrumented; race timings are not normal performance claims.
+Independent normalizer review found no underestimates across exhaustive scalar
+contexts, Hangul, conformance pairs and 300000 random strings; old/new output
+matched on 500000 random strings. In-repo tests fail on any measured-capacity
+growth, verify packed sort stability and cover long expanding nonstarter runs.

@@ -21,15 +21,114 @@ func (Form) String(s string) string {
 	if normal {
 		return s
 	}
-	rb := reorderBuffer{out: make([]byte, n, len(s))}
-	copy(rb.out, s[:n])
+	ext := measure(s, n)
+	rb := reorderBuffer{
+		rune:    make([]segRune, 0, ext.maxEntries),
+		scratch: make([]uint32, 0, ext.maxUnordered),
+	}
+	rb.out.Grow(ext.outBytes)
+	rb.out.WriteString(s[:n])
 	for n < len(s) {
 		n = decomposeSegment(&rb, s, n)
 		end, _ := quickSpan(s, n)
-		rb.out = append(rb.out, s[n:end]...)
+		rb.out.WriteString(s[n:end])
 		n = end
 	}
-	return string(rb.out)
+	return rb.out.String()
+}
+
+// extent bounds storage before the non-normal path writes any output. It
+// mirrors insert's internal flushes and decomposeSegment's segment boundaries.
+type extent struct {
+	maxEntries, maxUnordered, outBytes int
+}
+
+type extentBuffer struct {
+	extent
+	entries, nonstarters int
+	lastCCC              uint8
+	unordered            bool
+}
+
+func (e *extentBuffer) finishRun() {
+	if e.unordered {
+		e.maxUnordered = max(e.maxUnordered, e.nonstarters)
+	}
+	e.nonstarters, e.lastCCC, e.unordered = 0, 0, false
+}
+
+func (e *extentBuffer) flush() {
+	e.finishRun()
+	e.maxEntries = max(e.maxEntries, e.entries)
+	e.entries = 0
+}
+
+func (e *extentBuffer) add(ccc uint8, size int) {
+	e.entries++
+	// Saturate rather than overflow for an output larger than an int can hold.
+	if e.outBytes > int(^uint(0)>>1)-size {
+		e.outBytes = int(^uint(0) >> 1)
+	} else {
+		e.outBytes += size
+	}
+	if ccc == 0 {
+		e.finishRun()
+		return
+	}
+	if e.lastCCC > ccc {
+		e.unordered = true
+	}
+	e.lastCCC = ccc
+	e.nonstarters++
+}
+
+func measure(s string, start int) extent {
+	e := extentBuffer{extent: extent{outBytes: start}}
+	for sp := start; sp < len(s); {
+		info := lookupInfo(s[sp:])
+		for {
+			r, _ := utf8.DecodeRuneInString(s[sp:])
+			switch {
+			case hangulBase <= r && r < hangulEnd:
+				count := 2
+				if (r-hangulBase)%28 != 0 {
+					count++
+				}
+				for range count {
+					e.add(0, 3)
+				}
+			case info.hasDecomposition():
+				for dcomp := info.Decomposition(); len(dcomp) > 0; {
+					part := compInfo(nfcData.lookup(dcomp))
+					if part.BoundaryBefore() && e.entries > 0 {
+						e.flush()
+					}
+					_, size := utf8.DecodeRune(dcomp)
+					e.add(part.ccc, size)
+					dcomp = dcomp[size:]
+				}
+			default:
+				e.add(info.ccc, utf8.RuneLen(r))
+			}
+			sp += int(info.size)
+			if sp >= len(s) {
+				break
+			}
+			info = lookupInfo(s[sp:])
+			if info.nLeadingNonStarters() == 0 {
+				break
+			}
+		}
+		e.flush()
+		end, _ := quickSpan(s, sp)
+		if e.outBytes > int(^uint(0)>>1)-(end-sp) {
+			e.outBytes = int(^uint(0) >> 1)
+		} else {
+			e.outBytes += end - sp
+		}
+		sp = end
+	}
+	return e.extent
 }
 
 func lookupInfo(s string) Properties { return compInfo(nfcData.lookupString(s)) }

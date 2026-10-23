@@ -10,8 +10,12 @@ The composition and Hangul algorithms and packed property decoder are retained
 from x/text. Segment storage changes from fixed UTF-8 byte/position arrays to
 growable compact rune entries. Stable counting sort replaces per-rune insertion
 sort, with CCC-zero entries as fixed barriers. This preserves canonical order
-without quadratic behavior on long segments. Storage grows by doubling and is
-local to the call. No stream-safe CGJ is inserted. Input validity is handled by
+without quadratic behavior on long segments. An allocation-free measurement pass
+sizes segment entries, unordered-run scratch and output before normalization.
+The main entries use 8 bytes each; stable-sort scratch packs each scalar, CCC and
+backward flag into 4 bytes. A pre-sized strings.Builder avoids output growth and
+the final string copy. Storage is local to the call, with doubling only as a
+correctness fallback if a measured bound is too small. No stream-safe CGJ is inserted. Input validity is handled by
 the owning ctok package before calling String.
 
 The retained implementation intentionally does not expose streaming readers,

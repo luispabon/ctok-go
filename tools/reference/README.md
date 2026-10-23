@@ -76,3 +76,47 @@ Repeat and require byte-identical output. The Unicode flow also recomputes the
 vocabulary artifact hashes from read-only mounts; missing artifacts fail rather
 than silently carrying forward stale recorded hashes. Generate the vocabulary
 first when bootstrapping all artifacts, using the shipped Unicode manifest.
+
+## Count parity and marked streams
+
+From the library root, using the same pinned image. Raw uint32 little-endian
+lengths followed by UTF-8 bytes preserve CRLF, NUL and all other control bytes.
+No JSON/text-mode stdin decoding is involved. The script verifies the complete
+corpus SHA-256 before asking upstream's public API for counts. It uses eight
+ordered workers. The compressed count pairs and manifest are the only corpus
+outputs committed, not the generated inputs.
+
+```sh
+set -o pipefail
+GOTOOLCHAIN=go1.26.10 go run ./internal/testcorpus/cmd/export | \
+  docker run -i --rm --network none --user "$(id -u):$(id -g)" \
+    -v "$PWD/tools/reference:/work:ro" \
+    -v "$PWD/testdata/parity:/out" \
+    ctok-go-oracle:434612e python count_corpus.py
+GOTOOLCHAIN=go1.26.10 go run ./internal/testcorpus/cmd/export -limit 5000 | \
+  docker run -i --rm --network none --user "$(id -u):$(id -g)" \
+    -v "$PWD/tools/reference:/work:ro" \
+    -v "$PWD/testdata/parity:/out" \
+    ctok-go-oracle:434612e python stream_fixtures.py
+```
+
+Repeat both commands and require identical SHA-256 hashes. `gzip` outputs use
+mtime=0. `manifest.json` records the corpus version, seed, category counts, total
+bytes, oracle pins, script hash and compressed expectation hash. Stream artifacts
+and their script are pinned separately in PROVENANCE.md. Corpus generation uses
+an explicit integer PRNG and fixed atoms, never toolchain Unicode predicates.
+
+The upstream MIT API edge inputs are separate from the authored corpus. Supply
+only the pinned source test file, not any evaluation corpora:
+
+```sh
+docker run --rm --network none --user "$(id -u):$(id -g)" \
+  -v "$PWD/tools/reference:/work:ro" \
+  -v /absolute/path/to/pinned/ctok/tests/test_api.py:/reference_test_api.py:ro \
+  -v "$PWD/testdata/parity:/out" \
+  ctok-go-oracle:434612e python api_edges.py
+```
+
+Repeat and require the api_edges.json hash recorded in PROVENANCE.md. These
+inputs are evaluated under V48, whose frame differs from the older families'
+expectations in the source test file.

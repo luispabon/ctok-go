@@ -25,7 +25,8 @@ func (v *vocabulary) byteFloor(r rune) int {
 }
 
 func (v *vocabulary) countMarked(stream []rune) int {
-	best := make([]int, len(stream)+1)
+	window := max(v.maxDepth, 1) + 1
+	best := make([]int, window)
 	for end := 1; end <= len(stream); end++ {
 		r := stream[end-1]
 		node, ok := v.child(0, r)
@@ -33,7 +34,7 @@ func (v *vocabulary) countMarked(stream []rune) int {
 		if !structuralMarker(r) && (!ok || !v.nodes[node].terminal) {
 			floor = v.byteFloor(r)
 		}
-		best[end] = best[end-1] + floor
+		best[end%window] = best[(end-1)%window] + floor
 		if !ok {
 			continue
 		}
@@ -42,10 +43,10 @@ func (v *vocabulary) countMarked(stream []rune) int {
 			if !ok {
 				break
 			}
-			if v.nodes[node].terminal && best[start]+1 < best[end] {
-				best[end] = best[start] + 1
+			if v.nodes[node].terminal && best[start%window]+1 < best[end%window] {
+				best[end%window] = best[start%window] + 1
 			}
 		}
 	}
-	return best[len(stream)]
+	return best[len(stream)%window]
 }

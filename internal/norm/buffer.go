@@ -4,7 +4,10 @@
 
 package norm
 
-import "unicode/utf8"
+import (
+	"strings"
+	"unicode/utf8"
+)
 
 // segRune replaces the fixed byte/position storage in x/text. Its class is
 // the monotonically compressed CCC index from the generated tables.
@@ -16,11 +19,24 @@ type segRune struct {
 
 func (s segRune) combinesBackward() bool { return s.backward }
 
+// A Unicode scalar needs 21 bits; CCC and backward occupy the next nine bits.
+func packEntry(entry segRune) uint32 {
+	packed := uint32(entry.r) | uint32(entry.ccc)<<21
+	if entry.backward {
+		packed |= 1 << 29
+	}
+	return packed
+}
+
+func unpackEntry(packed uint32) segRune {
+	return segRune{r: rune(packed & (1<<21 - 1)), ccc: uint8(packed >> 21), backward: packed&(1<<29) != 0}
+}
+
 type reorderBuffer struct {
 	rune    []segRune
-	scratch []segRune
+	scratch []uint32
 	nrune   int
-	out     []byte
+	out     strings.Builder
 }
 
 func growSegment(s []segRune, needed int) []segRune {
@@ -90,13 +106,19 @@ func (rb *reorderBuffer) order() {
 				counts[i] = position
 				position += count
 			}
-			rb.scratch = growSegment(rb.scratch, end-start)
+			if cap(rb.scratch) < end-start {
+				rb.scratch = make([]uint32, end-start)
+			} else {
+				rb.scratch = rb.scratch[:end-start]
+			}
 			for _, entry := range rb.rune[start:end] {
 				i := counts[entry.ccc]
-				rb.scratch[i] = entry
+				rb.scratch[i] = packEntry(entry)
 				counts[entry.ccc]++
 			}
-			copy(rb.rune[start:end], rb.scratch)
+			for i, entry := range rb.scratch {
+				rb.rune[start+i] = unpackEntry(entry)
+			}
 		}
 		start = end
 	}
@@ -106,7 +128,7 @@ func (rb *reorderBuffer) doFlush() {
 	rb.order()
 	rb.compose()
 	for _, entry := range rb.rune[:rb.nrune] {
-		rb.out = utf8.AppendRune(rb.out, entry.r)
+		rb.out.WriteRune(entry.r)
 	}
 	rb.nrune = 0
 	rb.rune = rb.rune[:0]

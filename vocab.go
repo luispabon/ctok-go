@@ -35,6 +35,7 @@ type vocabulary struct {
 	bytes    map[string]struct{}
 	units    map[rune]struct{}
 	newlines []int
+	maxDepth int
 }
 
 func loadVocabulary() (*vocabulary, error) {
@@ -141,6 +142,7 @@ func buildVocabulary(pieces, prefixes []string) *vocabulary {
 			edges = append(edges, pendingEdge{path[len(path)-1], trieEdge{r, next}})
 			path = append(path, next)
 		}
+		v.maxDepth = max(v.maxDepth, len(path)-1)
 		v.nodes[path[len(path)-1]].terminal = true
 		previous = runes
 	}
