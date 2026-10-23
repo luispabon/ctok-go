@@ -31,6 +31,42 @@ This is the Go input contract; upstream Python's per-surrogate replacement handl
 a different input representation. Literal marker noncharacters remain unchanged
 through normalization and are escaped during the later stream construction.
 
+## Vocabulary and count-only tiling
+
+The v1 runtime blob `data/v48.bin` is generated from all non-byte groups in
+`pieces_v4_7.json` using upstream's parser and build_vocab. There are 15283 source
+records, including 468 byte-prefix records and 3 structural specials. Parsed pieces
+plus glued contractions expand to 14819 unique runtime pieces, with 2755 non-marker
+unit characters. The runtime byte floor includes those units and the 468 prefixes.
+No witness records or JSON are loaded at runtime.
+
+Schema: 8-byte `CTOK48\x00\x01` header, 32-byte SHA256 of the remaining payload,
+then little-endian uint32 piece/prefix counts, followed by length-prefixed UTF-8
+pieces and raw byte prefixes, each sorted and unique within its section. Record
+lengths are uint32; runtime counts and indexes use int. The loader checks bounds,
+ordering, UTF-8 and checksum before building a compact reverse trie. Shared state
+is initialized once; counting scratch belongs to each call. The newline-tail DP
+uses a bounded rolling window, not an input-sized newline string.
+
+Blob SHA256: `ab2710ee915f67313f914163fb6a3e4011227935ec3a0f4a2aa2a1f3c5677350`.
+Payload SHA256: `632e57815e584666e9f921a8cc10fceae3e36fd46af3f8dfcc80b57f501dbb26`.
+Canonical sorted JSON piece-list SHA256:
+`f49fb02d8600ebeb28a38f99f31d652d998919b1734280c325599fa185524c4a`.
+Source hash is recorded in REFERENCE.json. Regenerate offline with
+`python generate.py vocabulary`, mounting only `/out/data` and `/out/testdata`
+writable using the same pinned image and read-only `/work` tooling mount.
+`testdata/vocabulary.json` records these hashes, group counts, contractions,
+seed 931 byte-floor/marked-stream witnesses and tail costs. The marked-stream
+witnesses come from upstream stream_norm and min_vocab_tile, independently of
+our later stream implementation. Byte floors map internal U+E000 through U+E004
+back to literal U+FDD0 through U+FDD4 before pricing, while trie matching retains
+the escaped codepoint. Structural floor markers exclude pad, matching upstream.
+
+The pinned vocabulary's newline ladder is 1 through 16, 24 and 32. Therefore 30
+trailing newlines cost 0 beyond the frame, while 29 and 31 cost 1. Upstream's engine
+docstring describes 28 as free, but that witness is stale for this data file;
+the implementation follows the pinned algorithm and oracle, not that docstring.
+
 ## Normalization fallback
 
 The x/text v0.42.0 differential found that its stream-safe normalization inserts

@@ -39,6 +39,8 @@ exist. Mount only these explicit outputs writable:
 docker run --rm --network none --user "$(id -u):$(id -g)" \
   -v "$PWD/tools/reference:/work:ro" \
   -v /absolute/path/to/verified/ucd:/ucd:ro \
+  -v "$PWD/data/v48.bin:/out/data/v48.bin:ro" \
+  -v "$PWD/testdata/vocabulary.json:/out/testdata/vocabulary.json:ro" \
   -v "$PWD/unicode_tables.go:/out/unicode_tables.go" \
   -v "$PWD/testdata/unicode:/out/testdata/unicode" \
   ctok-go-oracle:434612e python generate.py
@@ -55,3 +57,22 @@ The read-only UCD directory contains the pinned NormalizationTest.txt input from
 and formatted Go output. Repeat generation and require unchanged files before committing.
 Normalization table generation and patch verification are recorded separately
 with the vendored NFC implementation.
+
+## Runtime vocabulary
+
+Run from the library root after the Unicode fixtures exist. The data and testdata
+directories must already exist. This flow hashes the generated vocabulary and
+refreshes the generator hash in the shared artifact manifest:
+
+```sh
+docker run --rm --network none --user "$(id -u):$(id -g)" \
+  -v "$PWD/tools/reference:/work:ro" \
+  -v "$PWD/data:/out/data" \
+  -v "$PWD/testdata:/out/testdata" \
+  ctok-go-oracle:434612e python generate.py vocabulary
+```
+
+Repeat and require byte-identical output. The Unicode flow also recomputes the
+vocabulary artifact hashes from read-only mounts; missing artifacts fail rather
+than silently carrying forward stale recorded hashes. Generate the vocabulary
+first when bootstrapping all artifacts, using the shipped Unicode manifest.
