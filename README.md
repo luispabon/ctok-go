@@ -136,7 +136,8 @@ Recorded development gates: cold initialization <=150 ms, retained shared heap
 4 MiB inputs and require a slope <=24 bytes per input byte. Input is never
 truncated. Resource tests are machine-sensitive; race-instrumented timing is not
 normal runtime performance. `TestPerfGuard` (build tag `perfguard`, excluded under
-`-race`) enforces the 1 MiB timing and mixed-throughput gates in CI. Detailed evidence and storage adaptations are in
+`-race`) enforces the 1 MiB timing and mixed-throughput gates in CI. Detailed
+evidence and storage adaptations are in
 [PROVENANCE.md](PROVENANCE.md).
 
 ## License and notices

@@ -15,8 +15,8 @@ const (
 	perfMinMiBPerSec = 2.0
 )
 
-// TestPerfGuard is run only by the CI perf job, with -tags perfguard and
-// -count=1.
+// The CI perf job runs TestPerfGuard with -tags perfguard and -count=1; it can
+// also run locally.
 func TestPerfGuard(t *testing.T) {
 	counter, err := New(V48)
 	if err != nil {
