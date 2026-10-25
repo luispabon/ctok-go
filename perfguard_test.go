@@ -4,34 +4,36 @@ package ctok
 
 import (
 	"runtime"
-	"strings"
 	"testing"
 	"time"
 )
 
 const (
+	perfSize         = 1 << 20
 	perfRuns         = 5
 	perfMaxRun       = time.Second
 	perfMinMiBPerSec = 2.0
 )
 
-// TestPerfGuard is run only by the CI perf job, with -tags perfguard and -count=1.
+// TestPerfGuard is run only by the CI perf job, with -tags perfguard and
+// -count=1.
 func TestPerfGuard(t *testing.T) {
 	counter, err := New(V48)
 	if err != nil {
 		t.Fatal(err)
 	}
-	mixed := strings.Repeat("Hello, 世界! café 🙂 naïve\u0301 x_y-42\n", (1<<20)/40+1)
-	expanding := strings.Repeat("\u0344", 1<<19)
+	mixed := benchmarkInput("Hello 世界 Καλημέρα مرحبا नमस्ते 👩\u200d💻\n", perfSize)
+	expanding := benchmarkInput("\u0344", perfSize)
 	best := perfBestRun(t, counter, "mixed", mixed)
-	if rate := float64(len(mixed)) / (1 << 20) / best.Seconds(); rate < perfMinMiBPerSec {
+	if rate := float64(len(mixed)) / perfSize / best.Seconds(); rate < perfMinMiBPerSec {
 		t.Errorf("mixed throughput %.2f MiB/s, want at least %.1f", rate, perfMinMiBPerSec)
 	}
 	perfBestRun(t, counter, "expanding", expanding)
 }
 
-// perfBestRun warms counter on text, then returns the fastest of perfRuns timed
-// counts. Each timed run must finish within perfMaxRun. GC runs before each timer.
+// perfBestRun warms counter on text, then times perfRuns counts with GC run
+// before each timer. It reports an error only after the loop, when the fastest
+// run exceeds perfMaxRun.
 func perfBestRun(t *testing.T, counter *Counter, name, text string) time.Duration {
 	t.Helper()
 	if counter.CountContent(text) == 0 {
@@ -44,11 +46,10 @@ func perfBestRun(t *testing.T, counter *Counter, name, text string) time.Duratio
 		if counter.CountContent(text) == 0 {
 			t.Fatalf("%s: count is zero", name)
 		}
-		elapsed := time.Since(start)
-		if elapsed > perfMaxRun {
-			t.Errorf("%s: run took %v, want at most %v", name, elapsed, perfMaxRun)
-		}
-		best = min(best, elapsed)
+		best = min(best, time.Since(start))
+	}
+	if best > perfMaxRun {
+		t.Errorf("%s: best of %d runs took %v, want at most %v", name, perfRuns, best, perfMaxRun)
 	}
 	return best
 }

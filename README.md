@@ -13,8 +13,10 @@ or network access. Install the v0.1.1 release:
 go get github.com/luispabon/ctok-go@v0.1.1
 ```
 
-v0.1.0 was the first release. v0.1.1 changes only tests, CI and documentation;
-its runtime API, embedded data and counts match v0.1.0.
+v0.1.0 was the first release. v0.1.1 adds test, CI and documentation hardening,
+a behavior-preserving refactor of the `New` constructor, and a formatting change
+to the generated file header. The exported API, embedded data and counts are
+unchanged from v0.1.0.
 
 ```go
 package main
