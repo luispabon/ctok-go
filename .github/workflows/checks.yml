@@ -29,3 +29,16 @@ jobs:
         run: go vet ./...
       - name: Pure Go build
         run: CGO_ENABLED=0 go build ./...
+  perf:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        go: ['1.26.x', 'stable']
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: ${{ matrix.go }}
+          cache: false
+      - name: Perfguard
+        run: go test -tags perfguard -run '^TestPerfGuard$' -count=1 -v .

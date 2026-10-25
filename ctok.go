@@ -22,10 +22,16 @@ type Counter struct {
 
 // New constructs a counter for family. Only V48 is supported.
 func New(family Family) (*Counter, error) {
+	return newCounter(family, loadVocabulary)
+}
+
+// newCounter constructs a counter for family. load provides the vocabulary and
+// runs only for supported families.
+func newCounter(family Family, load func() (*vocabulary, error)) (*Counter, error) {
 	if family != V48 {
 		return nil, ErrUnsupportedFamily
 	}
-	vocab, err := loadVocabulary()
+	vocab, err := load()
 	if err != nil {
 		return nil, fmt.Errorf("ctok: load vocabulary: %w", err)
 	}

@@ -8,8 +8,8 @@
     "testdata/unicode/properties.json": "08f2cb794fee34ffbbcbd0d43eae87b3f5a211b583f29bc0087a8fbca6f083ed",
     "testdata/vocabulary.json": "e449ffa6489eef00adb5a243804dec3d2d21276dadfe4e06473c2a5b0e8e607c",
     "tools/reference/finish_manifest.py": "a5039ea34b6994ae7d934382caada71967f27847ae981a917235fb5126f2b0d6",
-    "tools/reference/generate.py": "4a0ed9c157ca63b22ebe0e4642344abb41ba3331dbfe99d2971027bb5e2c55e9",
-    "unicode_tables.go": "2d699c4a465fdcb72b747e29dcfbb337bdabcfbdd02513bf938052c9aa01349c"
+    "tools/reference/generate.py": "be2b999a0124a23fc6d599bc4fb3777253b34714c381bb685e992c983569aae3",
+    "unicode_tables.go": "371d842fe7ace5ab948ac1212c603b4e13e359733930f24c2fef56fb474994d6"
   },
   "generator_version": 1,
   "python": "3.13.17",

@@ -92,3 +92,19 @@ func TestCountConcurrent(t *testing.T) {
 	}
 	group.Wait()
 }
+
+func TestNewLoadError(t *testing.T) {
+	loadErr := errors.New("load failed")
+	calls := 0
+	load := func() (*vocabulary, error) {
+		calls++
+		return nil, loadErr
+	}
+	if counter, err := newCounter("3.0", load); counter != nil || !errors.Is(err, ErrUnsupportedFamily) || calls != 0 {
+		t.Fatalf("unsupported family: counter %v err %v calls %d", counter, err, calls)
+	}
+	counter, err := newCounter(V48, load)
+	if counter != nil || !errors.Is(err, loadErr) || !strings.HasPrefix(err.Error(), "ctok: load vocabulary: ") || calls != 1 {
+		t.Fatalf("load error: counter %v err %v calls %d", counter, err, calls)
+	}
+}

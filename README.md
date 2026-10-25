@@ -7,12 +7,14 @@ Unofficial and unaffiliated with Anthropic. MIT licensed, derived from
 ## Install and use
 
 Requires Go 1.26 or later. No runtime dependencies, cgo, subprocesses, credentials
-or network access. Until the first release, install the reviewed development
-commit from `main`:
+or network access. Install the v0.1.1 release:
 
 ```sh
-go get github.com/luispabon/ctok-go@main
+go get github.com/luispabon/ctok-go@v0.1.1
 ```
+
+v0.1.0 was the first release. v0.1.1 changes only tests, CI and documentation;
+its runtime API, embedded data and counts match v0.1.0.
 
 ```go
 package main
@@ -79,6 +81,7 @@ go test -race ./...
 go vet ./...
 CGO_ENABLED=0 go build ./...
 go test -run '^$' -bench . -benchmem ./...
+go test -tags perfguard -run '^TestPerfGuard$' -count=1 -v .
 ```
 
 Verified on Go 1.26.10 and 1.27.3, linux/amd64. CI checks Go 1.26.x and the
@@ -130,7 +133,8 @@ Recorded development gates: cold initialization <=150 ms, retained shared heap
 <=24 bytes per input byte plus 1 MiB. Adversarial allocation tests also measure
 4 MiB inputs and require a slope <=24 bytes per input byte. Input is never
 truncated. Resource tests are machine-sensitive; race-instrumented timing is not
-normal runtime performance. Detailed evidence and storage adaptations are in
+normal runtime performance. `TestPerfGuard` (build tag `perfguard`, excluded under
+`-race`) enforces the 1 MiB timing and mixed-throughput gates in CI. Detailed evidence and storage adaptations are in
 [PROVENANCE.md](PROVENANCE.md).
 
 ## License and notices

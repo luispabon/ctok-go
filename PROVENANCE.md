@@ -201,7 +201,6 @@ startup acceptance, not effective application. Output tokens and observed thinki
 blocks are audit fields, not accuracy gates. Existing production isolation flags
 disabled configured setting sources, instruction discovery, auto-memory, skills
 and unrelated MCP tools; managed policy and CLI framing remain external uncertainty.
-Steiner production activation and the versioned release are separate later steps.
 
 ## Normalizer storage bounds and resource evidence
 
