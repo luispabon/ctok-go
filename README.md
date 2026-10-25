@@ -85,6 +85,33 @@ Verified on Go 1.26.10 and 1.27.3, linux/amd64. CI checks Go 1.26.x and the
 current stable Go release. These are supported-toolchain evidence, not a claim
 of universal exactness on every compiler or provider model.
 
+## Recorded provider validation
+
+A development-only Steiner validation used 18 fresh Claude Code 2.1.296 generation
+attempts, six each for exact IDs `claude-opus-5-5`, `claude-sonnet-5-5` and
+`claude-haiku-5-5`. All attempts completed. Three authored text categories compared
+appended-content deltas, not standalone payload counts:
+
+| Model | Old cl100k total absolute text error | V48 total absolute text error |
+| --- | ---: | ---: |
+| Opus 5.5 | 1049 | 1 |
+| Sonnet 5.5 | 1052 | 2 |
+| Haiku 5.5 | 1053 | 3 |
+
+All three passed the prospective text, tool and full-request improvement gates.
+Full-request absolute error fell by just over 40%, but remaining underestimates
+were 1750, 1755 and 1752 tokens respectively. Those residuals include CLI and tool
+framing outside this content counter. These limited observations do not establish
+whole-request exactness, billing equivalence or support for other model IDs.
+The library still accepts an explicit family, not a model name. Opus-specific
+limitations remain tracked in [issue #1](https://github.com/luispabon/ctok-go/issues/1).
+
+Each attempt requested disabled thinking via `--thinking disabled` and a 64-token
+output limit via `CLAUDE_CODE_MAX_OUTPUT_TOKENS`. Startup acceptance was checked
+without generation; effective application of those controls was not proven. See [PROVENANCE.md](PROVENANCE.md)
+for the frozen evaluator, evidence pins and protocol limitations. Steiner
+production activation is a separate integration step.
+
 ## Performance
 
 Development measurements: AMD Ryzen 9 7940HS, linux/amd64, Go 1.26.10. Single

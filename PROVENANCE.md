@@ -152,6 +152,57 @@ The api_edges.json artifact SHA-256 is
 `78bb31da0fb67b987a7111cda106dc0d224c0ea95835c81cfc1e836d47eb8734`.
 No separately licensed upstream evaluation corpora are used.
 
+## Recorded live evidence
+
+The development validation completed 18 of 18 generation attempts with Claude
+Code 2.1.296. Each of `claude-opus-5-5`, `claude-sonnet-5-5` and
+`claude-haiku-5-5` used six fixed slots: baseline, code/JSON, Markdown/prose,
+multilingual/Unicode, baseline with nine production code-agent tool schemas, and
+mixed text with the same schemas. The baseline system text was `Reply only OK.`;
+payload bytes were concatenated directly without a separator, and the user text
+was `Reply OK.`. Each generation used a fresh nonpersistent process, an empty
+working directory and a one-turn limit. The strict usage-credit safety check ran
+before each durable attempt reservation. Metadata-only startup and safety checks
+sent no user message and did not consume generation attempts.
+
+Library source commit: `7969144b7665d73ae1e20daee102cf1c5e0947a1`.
+Steiner evaluator frozen before the first reservation:
+`643bfe916d84ed8dc5083044d0d154dc346132f1`.
+The persistent attempt ledger SHA-256 is
+`804b66c77a1e0b00041833956a20e006eee2967ab55cd487148491a5d4c29ec1`.
+Sanitized observations, payload/tool hashes, normalized requests and recomputable
+reports live in Steiner's
+`internal/provider/testdata/claude_token_estimation/observations.json`.
+Private raw CLI streams and the local ledger are not library artifacts.
+
+Prompt occupancy sums per-message input, cache-creation and cache-read tokens once;
+cumulative CLI result usage is never used. Both old and candidate predictions use
+Steiner's semantic field traversal, not tokenized wire JSON. Text predictions use
+`CountContent(base + payload) - CountContent(base)`.
+
+| Model | Observed text deltas (code, prose, Unicode) | Old absolute text error sum | V48 absolute text error sum | Tool absolute error, old / V48 | Full absolute error, old / V48 |
+| --- | --- | ---: | ---: | ---: | ---: |
+| Opus 5.5 | 1518, 1337, 1182 | 1049 | 1 | 2004 / 1125 | 2936 / 1750 |
+| Sonnet 5.5 | 1519, 1338, 1183 | 1052 | 2 | 2005 / 1126 | 2941 / 1755 |
+| Haiku 5.5 | 1519, 1338, 1184 | 1053 | 3 | 2005 / 1126 | 2938 / 1752 |
+
+All models passed the unchanged prospective gates: each text category had at most
+10% absolute relative error, at most 5% underestimation and no worse absolute error
+than cl100k; the category error sum was at most half the old sum. Tool error was
+no worse, and full-request error was at most 60% of the old error. No offsets,
+framing adjustments or fitted multipliers were applied. Full-request residuals
+remain substantial underestimates and are not framing-free. Passing these narrow
+gates does not establish provider or whole-request exactness. Model-specific Opus
+work remains tracked at https://github.com/luispabon/ctok-go/issues/1.
+
+The launcher requested `--thinking disabled` and
+`CLAUDE_CODE_MAX_OUTPUT_TOKENS=64`. A control-only initialization experiment proved
+startup acceptance, not effective application. Output tokens and observed thinking
+blocks are audit fields, not accuracy gates. Existing production isolation flags
+disabled configured setting sources, instruction discovery, auto-memory, skills
+and unrelated MCP tools; managed policy and CLI framing remain external uncertainty.
+Steiner production activation and the versioned release are separate later steps.
+
 ## Normalizer storage bounds and resource evidence
 
 The full counter initially exceeded the 24 bytes/input-byte plus 1 MiB allocation
