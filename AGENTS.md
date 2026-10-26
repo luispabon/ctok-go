@@ -13,7 +13,7 @@ ctok-go is a pure-Go, dependency-free library that counts text with the pinned c
 - `internal/testcorpus`: deterministic authored-input generator for tests. `cmd/export` is a development exporter for the Python oracle.
 - `tools/reference`: development-only oracle (Python, Dockerfile) and pins. Go does not build it.
 - `testdata/`: committed fixtures and manifests.
-- `.github/workflows/checks.yml`: CI.
+- `.github/workflows/checks.yml`: CI checks and the `v*` tag release job.
 
 ## Architecture and API invariants
 
@@ -71,6 +71,8 @@ go test -tags perfguard -run '^TestPerfGuard$' -count=1 -v .
 ```
 
 Local diagnostic, not CI: `go test -run '^$' -bench . -benchmem ./...`. There is no Makefile.
+
+The `release` job runs only for `v*` tag pushes after the `go` and `perf` jobs pass. It is the only job with `contents: write` and publishes a GitHub Release with generated notes and no assets.
 
 In some local setups, `gofmt -l .` also scans ignored scratch directories. To check only tracked Go files: `git ls-files -z '*.go' | xargs -0 gofmt -l`.
 
