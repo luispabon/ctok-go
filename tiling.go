@@ -4,9 +4,7 @@ import "unicode/utf8"
 
 // byteFloor uses at most four UTF-8 bytes and no shared mutable rune cache.
 func (v *vocabulary) byteFloor(r rune) int {
-	if r >= 0xE000 && r <= 0xE004 {
-		r = bow + (r - 0xE000)
-	}
+	r = unescapeMarker(r)
 	if _, ok := v.units[r]; ok {
 		return 1
 	}

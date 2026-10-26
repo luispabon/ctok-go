@@ -17,9 +17,7 @@ func strayMark(r rune) bool {
 }
 
 func marksLikePunct(r rune) bool {
-	if r >= 0xe000 && r <= 0xe004 {
-		r = bow + r - 0xe000
-	}
+	r = unescapeMarker(r)
 	if r >= 0x10000 {
 		return false
 	}

@@ -108,3 +108,15 @@ func TestNewLoadError(t *testing.T) {
 		t.Fatalf("load error: counter %v err %v calls %d", counter, err, calls)
 	}
 }
+
+func TestNewDecodeError(t *testing.T) {
+	var decodeErr error
+	load := func() (*vocabulary, error) {
+		_, decodeErr = decodeVocabulary(nil)
+		return nil, decodeErr
+	}
+	counter, err := newCounter(V48, load)
+	if counter != nil || decodeErr == nil || !errors.Is(err, decodeErr) || err.Error() != "ctok: load vocabulary: invalid vocabulary header or schema" {
+		t.Fatalf("decode error: counter %v err %v decodeErr %v", counter, err, decodeErr)
+	}
+}

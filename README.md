@@ -90,6 +90,24 @@ Verified on Go 1.26.10 and 1.27.3, linux/amd64. CI checks Go 1.26.x and the
 current stable Go release. These are supported-toolchain evidence, not a claim
 of universal exactness on every compiler or provider model.
 
+## Releasing
+
+Pushing a `v*` tag runs the `release` job in `.github/workflows/checks.yml`. The
+job starts only after the `go` and `perf` matrices pass for that push, then creates
+a GitHub Release with generated notes. It uploads no assets.
+
+1. Merge the change first. The tagged commit must contain this workflow.
+2. Create an annotated tag for the final version and push it:
+
+   ```sh
+   git tag -a vX.Y.Z -m "vX.Y.Z"
+   git push origin vX.Y.Z
+   ```
+
+The `v*` condition is a prefix filter, not SemVer validation. Use it only for final
+versions: prerelease handling is not automated. Existing tags are not released
+retroactively. The repository token must allow `contents: write`.
+
 ## Recorded provider validation
 
 A development-only Steiner validation used 18 fresh Claude Code 2.1.296 generation
