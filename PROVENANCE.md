@@ -192,15 +192,83 @@ than cl100k; the category error sum was at most half the old sum. Tool error was
 no worse, and full-request error was at most 60% of the old error. No offsets,
 framing adjustments or fitted multipliers were applied. Full-request residuals
 remain substantial underestimates and are not framing-free. Passing these narrow
-gates does not establish provider or whole-request exactness. Model-specific Opus
-work remains tracked at https://github.com/luispabon/ctok-go/issues/1.
+gates does not establish provider or whole-request exactness. Unmodeled
+model-specific rules and framing remain tracked at https://github.com/luispabon/ctok-go/issues/1.
 
-The launcher requested `--thinking disabled` and
+The 18-call launcher requested `--thinking disabled` and
 `CLAUDE_CODE_MAX_OUTPUT_TOKENS=64`. A control-only initialization experiment proved
 startup acceptance, not effective application. Output tokens and observed thinking
 blocks are audit fields, not accuracy gates. Existing production isolation flags
 disabled configured setting sources, instruction discovery, auto-memory, skills
 and unrelated MCP tools; managed policy and CLI framing remain external uncertainty.
+
+### Opus 5.5 normalization probe
+
+Four single-turn Claude Code 2.1.296 calls to `claude-opus-5-5` tested whether
+system prompts that normalize to the same text give equal prompt occupancy.
+Library source commit: `3e40b0187e8bf93f9c89fc83aa5381342f3f8278`. This is
+separate from the 18-call validation above, which used
+`7969144b7665d73ae1e20daee102cf1c5e0947a1`.
+
+The user prompt was `Reply OK.` (9 UTF-8 bytes, CountContent 6). System prompts
+are shown as JSON strings. `\uXXXX` is JSON escape notation for the code point
+U+XXXX, so `\ue000` and `\u0001` are single characters, not six-character text.
+`caf\u00e9` is the precomposed `é`.
+
+| Case | System prompt (JSON string) | UTF-8 bytes | Normalized bytes | CountContent |
+| --- | --- | ---: | ---: | ---: |
+| A | `Reply only OK. Data: ab caf\u00e9. End.` | 35 | 35 | 16 |
+| B | `Reply only OK. Data: a\ue000\u0001b caf\u00e9. End.` | 39 | 35 | 16 |
+| C | `Reply only OK. Data: ab cafe\u0301. End.` | 36 | 35 | 16 |
+| D | Same as A | 35 | 35 | 16 |
+
+V48 normalization removes the private-use `\ue000` and control `\u0001` in B.
+In C, `e` plus `\u0301` composes to `é`. All four normalize to the same 35-byte
+text as A, checked by SHA-256.
+
+Each call was one fresh nonpersistent process with `--model claude-opus-5-5`,
+run from the same empty directory outside a git repository. That directory was
+not recreated per call. Isolation flags included: `--safe-mode`, `--tools ''`, `--strict-mcp-config`,
+`--setting-sources=`, `--disable-slash-commands` and `--no-session-persistence`.
+The child environment disabled auto-memory and CLAUDE.md. No thinking-disabled
+flag was used in this run.
+
+Prompt occupancy comes from the terminal message usage, summing input, cache
+creation and cache read once. Cumulative result usage matched and was not used.
+
+| Case | Input | Cache creation | Cache read | Output | Occupancy |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| A | 2 | 575 | 0 | 4 | 577 |
+| B | 2 | 575 | 0 | 4 | 577 |
+| C | 2 | 575 | 0 | 4 | 577 |
+| D | 2 | 0 | 575 | 4 | 577 |
+
+All four occupancy values are 577, so every delta is 0, as predicted. D's 575
+tokens were cache reads, consistent with A having written the same prompt. Cache
+state differs while occupancy does not.
+
+The init signature matched across all four calls, with 0 tools, 0 MCP servers and
+0 slash commands. The init event reported 3 plugins and 4 agents; their source
+was not investigated. No thinking blocks and no `api_retry` event were observed.
+That does not prove there were no hidden retries. Output was 4 tokens per call,
+below the 64-token limit requested through `CLAUDE_CODE_MAX_OUTPUT_TOKENS`. That
+setting's effect was not tested.
+
+Limits:
+
+- Four calls, one model, one CLI version and one local CLI setup.
+- Equal occupancy is consistent with V48 normalization end to end. It is not
+  tokenizer proof, and it does not show which layer applied normalization.
+- B changes two characters together, so its zero delta does not attribute the
+  result to U+E000 or U+0001 separately. C tests one canonical composition.
+- The stream does not echo the system or user prompts, so their wire
+  preservation is unverified.
+- Occupancy includes CLI framing and cache state. It is not compared numerically
+  with `CountContent`.
+- The framing offset is unresolved. An upstream ctok report gave a two-token
+  difference between Opus 5.5 and Opus 5. That is not the local +6 message
+  frame, and this probe does not resolve it.
+- Trailing whitespace and empty system prompts were not tested.
 
 ## Normalizer storage bounds and resource evidence
 

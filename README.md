@@ -57,8 +57,8 @@ concurrent calls. Scratch storage belongs to each call.
 - Exact agreement with the pinned reconstruction does not imply exact provider
   billing. Requests, tool schemas, caches, system framing and session overhead
   need separate accounting. No model-name routing or automatic future-family
-  selection is provided. Model-specific Opus behavior remains tracked in
-  [issue #1](https://github.com/luispabon/ctok-go/issues/1).
+  selection is provided. Unmodeled model-specific rules and framing remain
+  tracked in [issue #1](https://github.com/luispabon/ctok-go/issues/1).
 
 ## Correctness and reproducibility
 
@@ -108,6 +108,27 @@ The `v*` condition is a prefix filter, not SemVer validation. Use it only for fi
 versions: prerelease handling is not automated. Existing tags are not released
 retroactively. The repository token must allow `contents: write`.
 
+## Model compatibility
+
+Checked model IDs use the V48 family for approximate text-token counting.
+"Compatible" means the recorded text observations passed the text gates in
+[PROVENANCE.md](PROVENANCE.md). It is not an exact per-model profile.
+
+| Model ID | Family | Status | Checked evidence |
+| --- | --- | --- | --- |
+| `claude-opus-5-5` | V48 | Compatible for approximate text-token counting | Text observations (six attempts per model); four CLI normalization probes |
+| `claude-sonnet-5-5` | V48 | Compatible for approximate text-token counting | Text observations (six attempts per model) |
+| `claude-haiku-5-5` | V48 | Compatible for approximate text-token counting | Text observations (six attempts per model) |
+
+These rows apply only to V48 counts of text content, selected explicitly with
+`ctok.V48`. They do not establish exact model-specific frame, tool, system or
+whole-request overhead, billing, or support for other or future model IDs. The
+library has no model-name API, model-to-family mapping or automatic routing.
+
+Four additional Opus 5.5 CLI probes matched the local V48 predictions: system
+prompts that normalize to the same text produced equal prompt occupancy. Details
+and limits are in [PROVENANCE.md](PROVENANCE.md).
+
 ## Recorded provider validation
 
 A development-only Steiner validation used 18 fresh Claude Code 2.1.296 generation
@@ -126,10 +147,10 @@ Full-request absolute error fell by just over 40%, but remaining underestimates
 were 1750, 1755 and 1752 tokens respectively. Those residuals include CLI and tool
 framing outside this content counter. These limited observations do not establish
 whole-request exactness, billing equivalence or support for other model IDs.
-The library still accepts an explicit family, not a model name. Opus-specific
-limitations remain tracked in [issue #1](https://github.com/luispabon/ctok-go/issues/1).
+The library still accepts an explicit family, not a model name. Unmodeled
+model-specific rules and framing remain tracked in [issue #1](https://github.com/luispabon/ctok-go/issues/1).
 
-Each attempt requested disabled thinking via `--thinking disabled` and a 64-token
+In the 18-call validation, each attempt requested disabled thinking via `--thinking disabled` and a 64-token
 output limit via `CLAUDE_CODE_MAX_OUTPUT_TOKENS`. Startup acceptance was checked
 without generation; effective application of those controls was not proven. See [PROVENANCE.md](PROVENANCE.md)
 for the frozen evaluator, evidence pins and protocol limitations. Steiner
