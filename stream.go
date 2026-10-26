@@ -59,7 +59,7 @@ func streamV48(normalized string) ([]rune, int) {
 	// Literal structural glyphs are escaped after normalization strips BMP PUA.
 	needsEscape := false
 	for _, r := range text {
-		if r >= bow && r <= caps {
+		if escapeMarker(r) != r {
 			needsEscape = true
 			break
 		}
@@ -67,9 +67,7 @@ func streamV48(normalized string) ([]rune, int) {
 	if needsEscape {
 		escaped := make([]rune, 0, utf8.RuneCountInString(text))
 		for _, r := range text {
-			if r >= bow && r <= caps {
-				r = 0xe000 + r - bow
-			}
+			r = escapeMarker(r)
 			escaped = append(escaped, r)
 		}
 		text = string(escaped)
