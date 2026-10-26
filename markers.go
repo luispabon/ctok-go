@@ -8,7 +8,7 @@ const (
 	caps  = '\uFDD4'
 )
 
-// escapeMarker maps structural markers to literal U+E000..U+E004.
+// escapeMarker maps the marker range to literal U+E000..U+E004.
 func escapeMarker(r rune) rune {
 	if r >= bow && r <= caps {
 		return 0xe000 + r - bow
