@@ -47,52 +47,52 @@ func loadVocabulary() (*vocabulary, error) {
 
 func decodeVocabulary(blob []byte) (*vocabulary, error) {
 	if len(blob) < 48 || !bytes.Equal(blob[:8], []byte("CTOK48\x00\x01")) {
-		return nil, errors.New("ctok: invalid vocabulary header or schema")
+		return nil, errors.New("invalid vocabulary header or schema")
 	}
 	sum := sha256.Sum256(blob[40:])
 	if !bytes.Equal(blob[8:40], sum[:]) {
-		return nil, errors.New("ctok: vocabulary checksum mismatch")
+		return nil, errors.New("vocabulary checksum mismatch")
 	}
 	data := blob[40:]
 	nPieces := uint64(binary.LittleEndian.Uint32(data))
 	nPrefixes := uint64(binary.LittleEndian.Uint32(data[4:]))
 	data = data[8:]
 	if nPieces == 0 || nPieces+nPrefixes > uint64(len(data))/5 {
-		return nil, errors.New("ctok: invalid vocabulary record counts")
+		return nil, errors.New("invalid vocabulary record counts")
 	}
 	pieces := make([]string, 0, int(nPieces))
 	prefixes := make([]string, 0, int(nPrefixes))
 	for i := uint64(0); i < nPieces+nPrefixes; i++ {
 		if len(data) < 4 {
-			return nil, errors.New("ctok: truncated vocabulary length")
+			return nil, errors.New("truncated vocabulary length")
 		}
 		n := uint64(binary.LittleEndian.Uint32(data))
 		data = data[4:]
 		if n == 0 || n > uint64(len(data)) {
-			return nil, errors.New("ctok: invalid vocabulary record length")
+			return nil, errors.New("invalid vocabulary record length")
 		}
 		value := string(data[:int(n)])
 		data = data[int(n):]
 		if i < nPieces {
 			if !utf8.ValidString(value) {
-				return nil, errors.New("ctok: invalid UTF-8 vocabulary piece")
+				return nil, errors.New("invalid UTF-8 vocabulary piece")
 			}
 			if len(pieces) > 0 && pieces[len(pieces)-1] >= value {
-				return nil, errors.New("ctok: unordered or duplicate vocabulary piece")
+				return nil, errors.New("unordered or duplicate vocabulary piece")
 			}
 			pieces = append(pieces, value)
 		} else {
 			if len(value) > utf8.UTFMax {
-				return nil, errors.New("ctok: oversized byte prefix")
+				return nil, errors.New("oversized byte prefix")
 			}
 			if len(prefixes) > 0 && prefixes[len(prefixes)-1] >= value {
-				return nil, errors.New("ctok: unordered or duplicate byte prefix")
+				return nil, errors.New("unordered or duplicate byte prefix")
 			}
 			prefixes = append(prefixes, value)
 		}
 	}
 	if len(data) != 0 {
-		return nil, errors.New("ctok: trailing vocabulary data")
+		return nil, errors.New("trailing vocabulary data")
 	}
 	return buildVocabulary(pieces, prefixes), nil
 }
