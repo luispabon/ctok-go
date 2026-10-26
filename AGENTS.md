@@ -2,7 +2,7 @@
 
 ## Overview
 
-ctok-go is a pure-Go, dependency-free library that counts text with the pinned ctok V48 reconstruction. It is not a CLI or service. Runtime code uses no network, subprocesses, credentials, or cgo. Module: `github.com/luispabon/ctok-go`, Go 1.26 (`go.mod`: `go 1.26.0`). The library takes an explicit family, not a model name. Opus-specific behavior is tracked in issue #1.
+ctok-go is a pure-Go, dependency-free library that counts text with the pinned ctok V48 reconstruction. It is not a CLI or service. Runtime code uses no network, subprocesses, credentials, or cgo. Module: `github.com/luispabon/ctok-go`, Go 1.26 (`go.mod`: `go 1.26.0`). The library takes an explicit family, not a model name.
 
 ## Package map
 
@@ -23,7 +23,9 @@ ctok-go is a pure-Go, dependency-free library that counts text with the pinned c
 - Invalid UTF-8: each contiguous invalid byte run becomes one U+FFFD before NFC and the reference's control, space, and private-use normalization. Keep this order.
 - `Counter` holds only immutable shared data. Scratch storage belongs to each call. Do not add mutable shared state to `Counter`.
 - Measured preallocation in normalization and output is intentional, with growth only as a correctness fallback. Keep it. Resource tests enforce the byte bounds.
-- Do not add encode, decode, token-boundary, or model-name APIs.
+- Do not add encode, decode, token-boundary, or model-name APIs unless explicitly requested.
+- Do not upgrade Unicode, x/text, or vocabulary versions, and do not add CGJ insertion, compatibility normalization, or streaming normalization, unless explicitly requested.
+- In `internal/norm`, keep measure, insert, decomposeSegment, and quickSpan in lockstep. A segment-rule change must update all four.
 - Unicode behavior: category, combining class, and NFC follow Unicode 15.1. Regex Alphabetic and Mark follow Unicode 17.0. Case uses pinned upstream exceptions. Do not describe all case behavior as strictly Unicode 15.1.
 
 ## Go style and file organization
@@ -40,7 +42,8 @@ ctok-go is a pure-Go, dependency-free library that counts text with the pinned c
 - `internal/norm/tables15.1.0.go`: x/text generator output for Unicode 15.1.0, finished by `tools/reference/finish_norm.py`. Its SHA-256 must equal `generated_table_sha256` in `tools/reference/ucd.json`. The procedure is in `internal/norm/README.md`.
 - A handwritten `internal/norm` change does not by itself change the table hash. Update the source hashes in `norm_patch.json` and only the manifests the change affects.
 - `data/v48.bin` and `testdata/vocabulary.json` come from `generate.py vocabulary`. Fixtures under `testdata/parity` and `testdata/unicode` come from the count, stream, API-edge, and Unicode generators.
-- Regenerate, repeat, and require identical output before committing. Not every recorded hash is checked by a test or CI step, so verify by regenerating.
+- Regenerate and require identical output on repeat only for intentional generated-artifact changes. Run documented oracle commands with `--network none`. Not every recorded hash is checked by a test or CI step.
+- For ordinary handwritten `internal/norm` edits, verify the affected recorded hashes locally (for example with `sha256sum`) instead of running Docker. Do not regenerate artifacts or require Docker to make failing tests pass.
 - Pins are in `REFERENCE.json`, `PROVENANCE.md`, and `tools/reference/ucd.json`. The oracle is ctok v1.3.0 at `434612e23c9d9d42d1c5eba23c4761d653e0279d`, Python 3.13.17, and a digest-pinned Docker image. Do not run upstream code on the host.
 - Do not copy upstream evaluation corpora or other separately licensed data into the repository.
 
@@ -78,4 +81,4 @@ In some local setups, `gofmt -l .` also scans ignored scratch directories. To ch
 3. For frozen data, change the generator or source, regenerate with the documented commands, and update only the affected hashes and manifests.
 4. Run the narrowest test first, then the full CI commands.
 5. Update `README.md` or `PROVENANCE.md` when a pin, hash, count, or measurement changes.
-6. Stage explicit paths only. Leave `git status --porcelain` empty after committing.
+6. Stage explicit paths only and leave unrelated working-tree changes untouched.
